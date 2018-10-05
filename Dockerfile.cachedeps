@@ -1,0 +1,15 @@
+FROM golang:1.10
+
+RUN go get github.com/golang/dep/cmd/dep
+
+WORKDIR /go/src/github.com/windmilleng/buildbench
+
+# Download deps
+ADD Gopkg.* ./
+RUN dep ensure --vendor-only
+
+# Install source
+ADD . .
+RUN go install github.com/windmilleng/buildbench/cmd/example
+
+ENTRYPOINT /go/bin/example
