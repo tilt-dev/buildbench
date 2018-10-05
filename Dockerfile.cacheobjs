@@ -1,0 +1,26 @@
+# Start builder
+ARG baseImage="golang:1.10"
+FROM ${baseImage} as builder
+
+RUN go get github.com/golang/dep/cmd/dep
+
+WORKDIR /go/src/github.com/windmilleng/buildbench
+
+# Download deps
+ADD Gopkg.* ./
+RUN dep ensure --vendor-only
+
+# Install source
+ADD . .
+RUN go install github.com/windmilleng/buildbench/cmd/example
+# Done builder
+
+# Start obj-cache
+FROM golang:1.10 as obj-cache
+COPY --from=builder /root/.cache /root/.cache
+# Done obj-cache
+
+# Start main
+FROM builder
+ENTRYPOINT /go/bin/example
+# Done main
