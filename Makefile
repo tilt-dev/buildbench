@@ -1,4 +1,4 @@
-.PHONY: naive cachedeps cacheobjs cacheobjs-base tailybuild tailybuild-base clean
+.PHONY: naive cachedeps cacheobjs cacheobjs-base tailybuild tailybuild-base profile clean
 
 define inject-nonce
   sed -i -e 's/nonce = .*$$/nonce = "$(shell date)"/' cmd/example/main.go
@@ -7,6 +7,13 @@ endef
 define reset-nonce
   sed -i -e 's/nonce = .*$$/nonce = "Friday"/' cmd/example/main.go
 endef
+
+profile:
+	python3 profile.py
+
+uncontained:
+	$(call inject-nonce)
+	go run ./cmd/example/main.go
 
 naive:
 	$(call inject-nonce)
