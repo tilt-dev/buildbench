@@ -1,0 +1,12 @@
+FROM golang:1.10
+
+RUN go get github.com/golang/dep/cmd/dep
+
+WORKDIR /go/src/github.com/windmilleng/buildbench
+
+# Download deps
+ADD Gopkg.* ./
+RUN dep ensure --vendor-only
+
+# Keep the container open
+ENTRYPOINT tail -f /dev/null

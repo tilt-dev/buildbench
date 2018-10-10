@@ -11,7 +11,7 @@ endef
 profile:
 	python3 profile.py
 
-uncontained:
+naked:
 	$(call inject-nonce)
 	go run ./cmd/example/main.go
 
@@ -50,7 +50,20 @@ tailybuild: tailybuild-base
 	docker exec -it tailybuild go install github.com/windmilleng/buildbench/cmd/example
 	docker exec -it tailybuild /go/bin/example
 
+tailymount-base:
+	if [ "$(shell docker ps --filter=name=tailymount -q)" = "" ]; then \
+		docker build -t windmill.build/buildbench/tailymount-base -f Dockerfile.tailymount .; \
+    docker run --mount type=bind,source=$(shell pwd)/cmd,target=/go/src/github.com/windmilleng/buildbench/cmd \
+           --name tailymount -d windmill.build/buildbench/tailymount-base; \
+	fi;
+
+tailymount: tailymount-base
+	$(call inject-nonce)
+	docker exec -it tailymount go install github.com/windmilleng/buildbench/cmd/example
+	docker exec -it tailymount /go/bin/example
+
 clean:
 	$(call reset-nonce)
 	docker kill tailybuild && docker rm tailybuild || exit 0
+	docker kill tailymount && docker rm tailymount || exit 0
 	docker rmi -f $(shell docker image ls --filter=reference=windmill.build/buildbench/* -q) || exit 0
